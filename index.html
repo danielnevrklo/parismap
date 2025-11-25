@@ -78,18 +78,34 @@
                         </div>
                     </div>
                     <div class="flex items-start gap-3">
+                        <span class="mt-1 w-4 h-4 rounded-full bg-orange-400 shrink-0"></span>
+                        <div>
+                            <span class="block font-bold text-slate-700">Zvýšená opatrnost</span>
+                            <span class="text-xs text-slate-500">Kapsáři, turistické pasti nebo hlučné oblasti.</span>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
                         <span class="mt-1 w-4 h-4 rounded-full bg-red-500 shrink-0"></span>
                         <div>
                             <span class="block font-bold text-slate-700">Rizikové / Vyhnout se</span>
-                            <span class="text-xs text-slate-500">Kapsáři, hluk, necítíte se bezpečně v noci (okolí nádraží, sever).</span>
+                            <span class="text-xs text-slate-500">Kapsáři, drogová problematika, nebezpečné v noci.</span>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                <h2 class="text-sm font-bold text-red-700 flex items-center gap-2 mb-2">
+                    ⚠️ Varování: Parky v noci
+                </h2>
+                <p class="text-xs text-red-600">
+                    Bois de Boulogne a Bois de Vincennes jsou přes den krásné, ale po setmění se jim <strong>důrazně vyhněte</strong>. Jsou známé prostitucí a nelegálními aktivitami.
+                </p>
+            </div>
+
              <!-- Sources Info -->
              <div class="text-xs text-slate-400 pt-4 border-t border-slate-100">
-                Data sources: Wheatless Wanderlust, Embrace Someplace, Petite Suitcase, Teaspoon of Adventure, Reddit r/ParisTravelGuide.
+                Data sources: Wheatless Wanderlust, Embrace Someplace, Reddit, Offbeat France, Amber Student, Housing Anywhere, Islands.com.
             </div>
         </div>
     </aside>
@@ -103,10 +119,10 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <script>
-        // Initialize Map centered slightly more south to cover 13th/14th/15th
-        const map = L.map('map').setView([48.8566, 2.3522], 12);
+        // Initialize Map centered to show wider area (including parks)
+        const map = L.map('map').setView([48.8566, 2.34], 12);
 
-        // Light Mode Tiles (CartoDB Positron) - Clean, white map
+        // Light Mode Tiles (CartoDB Positron)
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
@@ -146,7 +162,7 @@
             [48.8380, 2.3450], [48.8400, 2.3600],
             [48.8500, 2.3620], [48.8530, 2.3550], [48.8570, 2.3450]
         ];
-        createZone(latinStGermainCoords, '#10b981', 'Latin Quarter & St Germain (5. a 6.)', 'Klasická Paříž, kavárny. <strong>Tip:</strong> V 5. obvodu lze najít "hidden gems" hotely za dobrou cenu.');
+        createZone(latinStGermainCoords, '#10b981', 'Latin Quarter & St Germain (5. a 6.)', 'Klasická Paříž, kavárny, bezpečné. Studentská atmosféra kolem Sorbonny.');
 
         // 1st Arrondissement
         const louvreCoords = [
@@ -158,40 +174,55 @@
 
         // --- 2. BLUE ZONES (Budget & Safe) ---
         
-        // 11th Arrondissement (Bastille / Oberkampf)
+        // 11th Arrondissement
         const bastilleCoords = [
-            [48.8750, 2.3700], [48.8750, 2.3850], // North border
-            [48.8550, 2.3900], [48.8520, 2.3700], // South/East
-            [48.8540, 2.3700], [48.8600, 2.3720]  // West (touches Marais)
+            [48.8750, 2.3700], [48.8750, 2.3850], 
+            [48.8550, 2.3900], [48.8520, 2.3700], 
+            [48.8540, 2.3700], [48.8600, 2.3720]
         ];
-        createZone(bastilleCoords, '#3b82f6', '11. Obvod (Bastille/Oberkampf)', '<strong>Skvělé pro mladé a foodies.</strong> Spousta barů, levnější jídlo než v centru, živá atmosféra a bezpečno.');
+        createZone(bastilleCoords, '#3b82f6', '11. Obvod (Bastille/Oberkampf)', 'Skvělé pro mladé a foodies. Spousta barů, živá atmosféra a bezpečno.');
 
-        // 13th Arrondissement (Gobelins / Butte-aux-Cailles)
+        // 13th Arrondissement
         const gobelinsCoords = [
-            [48.8400, 2.3600], [48.8400, 2.3400], // Top (touches Latin Q)
-            [48.8250, 2.3400], [48.8200, 2.3650]  // Bottom
+            [48.8400, 2.3600], [48.8400, 2.3400], 
+            [48.8250, 2.3400], [48.8200, 2.3650]
         ];
-        createZone(gobelinsCoords, '#3b82f6', '13. Obvod (Place d\'Italie)', '<strong>Village Vibe.</strong> Oblast Butte-aux-Cailles působí jako vesnice. Klidné, levné, bezpečné. Čínská čtvrť nabízí skvělé levné jídlo.');
+        createZone(gobelinsCoords, '#3b82f6', '13. Obvod (Place d\'Italie)', 'Village Vibe (Butte-aux-Cailles). Klidné, levné, bezpečné.');
 
-        // 14th & 15th (Montparnasse / Convention) - Large Residential Area
+        // 14th & 15th
         const residentialSouthCoords = [
-            [48.8420, 2.3260], // Top Right (touches 6th)
-            [48.8500, 2.3000], // Top Left (touches 7th/Eiffel)
-            [48.8300, 2.2800], // Far West
-            [48.8250, 2.3200], // Bottom
-            [48.8350, 2.3350]  // East
+            [48.8420, 2.3260], [48.8500, 2.3000], 
+            [48.8300, 2.2800], [48.8250, 2.3200], 
+            [48.8350, 2.3350]
         ];
-        createZone(residentialSouthCoords, '#60a5fa', '14. a 15. Obvod', '<strong>Rodinné a klidné.</strong> Často opomíjené, ale velmi bezpečné "rezidenční" čtvrti. 14. obvod (Montparnasse) má skvělé spojení na letiště.');
+        createZone(residentialSouthCoords, '#60a5fa', '14. a 15. Obvod', 'Rodinné a klidné rezidenční čtvrti. Velmi bezpečné.');
 
-        // Belleville / Menilmontant (20th) - Hipster Budget
+        // Belleville
         const bellevilleCoords = [
             [48.8750, 2.3850], [48.8800, 2.4000],
             [48.8600, 2.4000], [48.8600, 2.3900]
         ];
-        createZone(bellevilleCoords, '#93c5fd', '20. Obvod (Belleville)', '<strong>Alternativní budget.</strong> Umělecká čtvrť, levné bary, park Belleville. Poznámka: Držte se blíže k 11. obvodu, dále na východ (k Porte de Montreuil) už to může být horší.');
+        createZone(bellevilleCoords, '#93c5fd', '20. Obvod (Belleville)', 'Alternativní budget. Držte se blíže k 11. obvodu.');
 
 
-        // --- 3. RED ZONES (Avoid) ---
+        // --- 3. ORANGE ZONES (Caution) ---
+
+        // Chatelet Les Halles
+        const chateletCoords = [
+            [48.8640, 2.3420], [48.8640, 2.3500],
+            [48.8590, 2.3500], [48.8590, 2.3420]
+        ];
+        createZone(chateletCoords, '#fb923c', 'Châtelet - Les Halles', '<strong>Zvýšená opatrnost.</strong> Velký dopravní uzel. Pozor na kapsáře. V noci se zde shlukují party a atmosféra může být nepříjemná.');
+
+        // Pigalle (South Montmartre)
+        const pigalleCoords = [
+            [48.8840, 2.3320], [48.8840, 2.3420],
+            [48.8800, 2.3420], [48.8800, 2.3320]
+        ];
+        createZone(pigalleCoords, '#fb923c', 'Pigalle', 'Turistická "Red Light District". Přes den plné turistů, v noci seedy. Pozor na agresivní vyhazovače barů a podvody.');
+
+
+        // --- 4. RED ZONES (Avoid) ---
 
         // Gare du Nord / Est
         const garesCoords = [
@@ -207,19 +238,33 @@
         ];
         createZone(barbesCoords, '#dc2626', 'Barbès - Rochechouart', '<strong>Vyhnout se.</strong> Často zmiňováno jako rizikové místo pro turisty.');
 
-        // La Chapelle / North
+        // La Chapelle / North / Saint Denis border
         const chapelleCoords = [
-            [48.9000, 2.3550], [48.9000, 2.3700], 
+            [48.9100, 2.3500], [48.9100, 2.3700], // Extended north towards St Denis
             [48.8920, 2.3700], [48.8920, 2.3550]
         ];
-        createZone(chapelleCoords, '#b91c1c', 'Porte de la Chapelle', 'Severní periferie. Bezpečnostně nevhodné.');
+        createZone(chapelleCoords, '#b91c1c', 'Porte de la Chapelle & Saint-Denis', 'Severní periferie. Mnoho turistů sem omylem zabloudí kvůli levným hotelům. Bezpečnostní situace je zde dlouhodobě horší.');
         
         // Stalingrad
         const stalingradCoords = [
-            [48.8850, 2.3650], [48.8850, 2.3750], 
+            [48.8860, 2.3650], [48.8860, 2.3750], 
             [48.8800, 2.3750], [48.8800, 2.3650]
         ];
-        createZone(stalingradCoords, '#ef4444', 'Stalingrad', 'Historicky problematická oblast (drogy), i když se gentrifikuje. Pro turisty stále "raději ne".');
+        createZone(stalingradCoords, '#ef4444', 'Stalingrad / Jaurès', 'Historické problémy s crackem. Ačkoliv se situace mění, v noci to stále není doporučeno.');
+
+        // Bois de Boulogne (West Park)
+        const boulogneCoords = [
+            [48.8800, 2.2800], [48.8800, 2.2500],
+            [48.8500, 2.2500], [48.8500, 2.2700]
+        ];
+        createZone(boulogneCoords, '#ef4444', 'Bois de Boulogne (Park)', '<strong>NEBEZPEČNÉ V NOCI.</strong> Přes den krásný park, po setmění centrum prostituce a kriminality. Vyhněte se mu v noci obloukem.');
+
+        // Bois de Vincennes (East Park)
+        const vincennesCoords = [
+            [48.8450, 2.4200], [48.8450, 2.4600],
+            [48.8200, 2.4600], [48.8200, 2.4200]
+        ];
+        createZone(vincennesCoords, '#ef4444', 'Bois de Vincennes (Park)', '<strong>NEBEZPEČNÉ V NOCI.</strong> Stejně jako Boulogne - v noci neosvětlené a nebezpečné.');
 
     </script>
 </body>
