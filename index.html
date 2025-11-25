@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Paříže: Kde se (ne)ubytovat</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <style>
+        body {
+            background-color: #f8fafc; /* Slate 50 */
+            color: #1e293b; /* Slate 800 */
+        }
+        #map {
+            height: 100vh;
+            width: 100%;
+            z-index: 1;
+        }
+        .sidebar {
+            height: 100vh;
+            overflow-y: auto;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .leaflet-popup-content h3 {
+            color: #0f172a;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-screen overflow-hidden">
+
+    <!-- Sidebar (Left) -->
+    <aside class="sidebar w-full md:w-96 bg-white border-r border-slate-200 shadow-xl z-20 flex flex-col">
+        <div class="p-6 border-b border-slate-100">
+            <h1 class="text-2xl font-bold text-slate-800">Paříž: Kde bydlet</h1>
+            <p class="text-sm text-slate-500 mt-2">Průvodce lokalitami podle rozpočtu a bezpečnosti.</p>
+        </div>
+
+        <div class="p-6 flex-grow space-y-8">
+            
+            <!-- Legend -->
+            <div>
+                <h2 class="text-xs uppercase tracking-wider text-slate-400 font-bold mb-3">Legenda</h2>
+                <div class="space-y-3">
+                    <div class="flex items-start gap-3">
+                        <span class="mt-1 w-4 h-4 rounded-full bg-emerald-500 shrink-0"></span>
+                        <div>
+                            <span class="block font-bold text-slate-700">Top Lokality (Premium)</span>
+                            <span class="text-xs text-slate-500">Centrum, historie, drahé (1., 4., 6. obvod).</span>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="mt-1 w-4 h-4 rounded-full bg-blue-500 shrink-0"></span>
+                        <div>
+                            <span class="block font-bold text-slate-700">Budget & Bezpečné</span>
+                            <span class="text-xs text-slate-500">Skvělý poměr cena/výkon. Méně turistů, více místních (11., 13., 14., 15.).</span>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <span class="mt-1 w-4 h-4 rounded-full bg-red-500 shrink-0"></span>
+                        <div>
+                            <span class="block font-bold text-slate-700">Rizikové / Vyhnout se</span>
+                            <span class="text-xs text-slate-500">Kapsáři, hluk, necítíte se bezpečně v noci (okolí nádraží, sever).</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Tips Section -->
+            <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                <h2 class="text-sm font-bold text-slate-700 flex items-center gap-2 mb-3">
+                    💡 Tipy pro nízký rozpočet
+                </h2>
+                <ul class="space-y-3 text-sm text-slate-600 list-disc list-inside">
+                    <li>
+                        <strong>Nebojte se vzdálenosti:</strong> Ubytování v 13. nebo 15. obvodu je o 30 % levnější. Metro v Paříži je extrémně husté – do centra jste za 20 min.
+                    </li>
+                    <li>
+                        <strong>Snídaně mimo hotel:</strong> Francouzské hotely si účtují 15€+ za snídani. V pekárně (Boulangerie) za rohem dáte za kávu a croissant 5€.
+                    </li>
+                    <li>
+                        <strong>Latinská čtvrť (překvapivě):</strong> Zdroje uvádí, že starší hotely v 5. obvodu mohou být levné, pokud rezervujete s předstihem.
+                    </li>
+                    <li>
+                        <strong>Pikniky:</strong> Využijte parky (Buttes-Chaumont, Lucemburské zahrady) místo drahých obědů.
+                    </li>
+                </ul>
+            </div>
+
+             <!-- Sources Info -->
+             <div class="text-xs text-slate-400 pt-4 border-t border-slate-100">
+                Data sources: Wheatless Wanderlust, Embrace Someplace, Petite Suitcase, Teaspoon of Adventure, Reddit r/ParisTravelGuide.
+            </div>
+        </div>
+    </aside>
+
+    <!-- Map Container -->
+    <main class="flex-grow relative h-1/2 md:h-full">
+        <div id="map"></div>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        // Initialize Map centered slightly more south to cover 13th/14th/15th
+        const map = L.map('map').setView([48.8566, 2.3522], 12);
+
+        // Light Mode Tiles (CartoDB Positron) - Clean, white map
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        // Helper function to create polygon
+        function createZone(coords, color, title, description, opacity = 0.4) {
+            const polygon = L.polygon(coords, {
+                color: color,
+                fillColor: color,
+                fillOpacity: opacity,
+                weight: 2
+            }).addTo(map);
+
+            polygon.bindPopup(`
+                <div class="p-1">
+                    <h3>${title}</h3>
+                    <p class="text-sm text-slate-600">${description}</p>
+                </div>
+            `);
+        }
+
+        // --- 1. GREEN ZONES (Premium / Central) ---
+        
+        // Le Marais
+        const maraisCoords = [
+            [48.8688, 2.3522], [48.8640, 2.3500], [48.8550, 2.3560],
+            [48.8520, 2.3650], [48.8540, 2.3700], 
+            [48.8600, 2.3720], [48.8670, 2.3680], [48.8688, 2.3522]
+        ];
+        createZone(maraisCoords, '#10b981', 'Le Marais (3. a 4.)', 'Historické srdce, trendy, bezpečné, ale dražší.');
+
+        // Latin Quarter & St Germain
+        const latinStGermainCoords = [
+            [48.8570, 2.3280], [48.8520, 2.3270], [48.8420, 2.3260],
+            [48.8380, 2.3450], [48.8400, 2.3600],
+            [48.8500, 2.3620], [48.8530, 2.3550], [48.8570, 2.3450]
+        ];
+        createZone(latinStGermainCoords, '#10b981', 'Latin Quarter & St Germain (5. a 6.)', 'Klasická Paříž, kavárny. <strong>Tip:</strong> V 5. obvodu lze najít "hidden gems" hotely za dobrou cenu.');
+
+        // 1st Arrondissement
+        const louvreCoords = [
+            [48.8680, 2.3200], [48.8600, 2.3250], [48.8580, 2.3450], 
+            [48.8650, 2.3460], [48.8680, 2.3400]
+        ];
+        createZone(louvreCoords, '#34d399', 'Louvre (1.)', 'Luxusní, centrální, drahé.');
+
+
+        // --- 2. BLUE ZONES (Budget & Safe) ---
+        
+        // 11th Arrondissement (Bastille / Oberkampf)
+        const bastilleCoords = [
+            [48.8750, 2.3700], [48.8750, 2.3850], // North border
+            [48.8550, 2.3900], [48.8520, 2.3700], // South/East
+            [48.8540, 2.3700], [48.8600, 2.3720]  // West (touches Marais)
+        ];
+        createZone(bastilleCoords, '#3b82f6', '11. Obvod (Bastille/Oberkampf)', '<strong>Skvělé pro mladé a foodies.</strong> Spousta barů, levnější jídlo než v centru, živá atmosféra a bezpečno.');
+
+        // 13th Arrondissement (Gobelins / Butte-aux-Cailles)
+        const gobelinsCoords = [
+            [48.8400, 2.3600], [48.8400, 2.3400], // Top (touches Latin Q)
+            [48.8250, 2.3400], [48.8200, 2.3650]  // Bottom
+        ];
+        createZone(gobelinsCoords, '#3b82f6', '13. Obvod (Place d\'Italie)', '<strong>Village Vibe.</strong> Oblast Butte-aux-Cailles působí jako vesnice. Klidné, levné, bezpečné. Čínská čtvrť nabízí skvělé levné jídlo.');
+
+        // 14th & 15th (Montparnasse / Convention) - Large Residential Area
+        const residentialSouthCoords = [
+            [48.8420, 2.3260], // Top Right (touches 6th)
+            [48.8500, 2.3000], // Top Left (touches 7th/Eiffel)
+            [48.8300, 2.2800], // Far West
+            [48.8250, 2.3200], // Bottom
+            [48.8350, 2.3350]  // East
+        ];
+        createZone(residentialSouthCoords, '#60a5fa', '14. a 15. Obvod', '<strong>Rodinné a klidné.</strong> Často opomíjené, ale velmi bezpečné "rezidenční" čtvrti. 14. obvod (Montparnasse) má skvělé spojení na letiště.');
+
+        // Belleville / Menilmontant (20th) - Hipster Budget
+        const bellevilleCoords = [
+            [48.8750, 2.3850], [48.8800, 2.4000],
+            [48.8600, 2.4000], [48.8600, 2.3900]
+        ];
+        createZone(bellevilleCoords, '#93c5fd', '20. Obvod (Belleville)', '<strong>Alternativní budget.</strong> Umělecká čtvrť, levné bary, park Belleville. Poznámka: Držte se blíže k 11. obvodu, dále na východ (k Porte de Montreuil) už to může být horší.');
+
+
+        // --- 3. RED ZONES (Avoid) ---
+
+        // Gare du Nord / Est
+        const garesCoords = [
+            [48.8820, 2.3500], [48.8830, 2.3600],
+            [48.8740, 2.3620], [48.8740, 2.3500]
+        ];
+        createZone(garesCoords, '#ef4444', 'Okolí nádraží (Gare du Nord/Est)', 'V noci nepříjemné, riziko krádeží. Není vhodné pro rodiny.');
+
+        // Barbes / Goutte d'Or
+        const barbesCoords = [
+            [48.8880, 2.3480], [48.8880, 2.3580],
+            [48.8820, 2.3580], [48.8820, 2.3480]
+        ];
+        createZone(barbesCoords, '#dc2626', 'Barbès - Rochechouart', '<strong>Vyhnout se.</strong> Často zmiňováno jako rizikové místo pro turisty.');
+
+        // La Chapelle / North
+        const chapelleCoords = [
+            [48.9000, 2.3550], [48.9000, 2.3700], 
+            [48.8920, 2.3700], [48.8920, 2.3550]
+        ];
+        createZone(chapelleCoords, '#b91c1c', 'Porte de la Chapelle', 'Severní periferie. Bezpečnostně nevhodné.');
+        
+        // Stalingrad
+        const stalingradCoords = [
+            [48.8850, 2.3650], [48.8850, 2.3750], 
+            [48.8800, 2.3750], [48.8800, 2.3650]
+        ];
+        createZone(stalingradCoords, '#ef4444', 'Stalingrad', 'Historicky problematická oblast (drogy), i když se gentrifikuje. Pro turisty stále "raději ne".');
+
+    </script>
+</body>
+</html>
